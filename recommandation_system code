@@ -1,0 +1,122 @@
+!pip install gradio
+
+!pip install openai==0.28
+
+import gradio as gr
+import openai
+
+# Sample data with expanded tags and coding languages
+courses = [
+    {"id": "CSE3112", "name": "Generative AI", "tags": ["AI", "Generative AI", "Deep Learning", "Neural Networks", "Python", "TensorFlow", "Machine Learning", "NLP", "Computer Vision", "GANs", "Reinforcement Learning", "Data Augmentation", "Transfer Learning", "Creativity", "Art Generation", "Image Synthesis", "Text-to-Image", "Model Interpretability", "Ethics in AI", "Bias in AI"]},
+    {"id": "CSE3113", "name": "Advanced Machine Learning", "tags": ["machine learning", "data science", "predictive modeling", "statistics", "Python", "R", "scikit-learn", "feature engineering", "ensemble methods", "model evaluation", "cross-validation", "hyperparameter tuning", "support vector machines", "random forests", "dimensionality reduction", "time series analysis", "big data", "data preprocessing", "model deployment", "A/B testing", "deep learning"]},
+    {"id": "CSE3114", "name": "Introduction to Programming", "tags": ["programming", "computer science", "coding", "software development", "Python", "Java", "C++", "basics", "algorithms", "control structures", "data types", "functions", "object-oriented programming", "error handling", "debugging", "file I/O", "best practices", "version control", "Git", "software design principles", "testing"]},
+    {"id": "CSE3115", "name": "Data Structures and Algorithms", "tags": ["programming", "data structures", "algorithms", "complexity analysis", "Python", "Java", "C++", "graphs", "sorting algorithms", "search algorithms", "trees", "hash tables", "linked lists", "dynamic programming", "recursion", "algorithm design", "big O notation", "memory management", "data manipulation", "problem-solving", "competitive programming"]},
+    {"id": "CSE3116", "name": "Database Management Systems", "tags": ["database", "SQL", "data management", "data modeling", "relational databases", "MySQL", "PostgreSQL", "NoSQL", "transactions", "ACID properties", "indexing", "query optimization", "data normalization", "database design", "entity-relationship models", "data warehousing", "ETL processes", "big data", "distributed databases", "database security", "backup and recovery"]},
+    {"id": "CSE3117", "name": "Operating Systems", "tags": ["operating systems", "computer science", "system design", "process management", "Linux", "C", "system calls", "memory management", "scheduling", "file systems", "I/O management", "virtual memory", "concurrency", "deadlock", "system architecture", "shell scripting", "process synchronization", "resource allocation", "OS security", "kernel", "device drivers"]},
+    {"id": "CSE3118", "name": "Computer Networks", "tags": ["networks", "communication", "network protocols", "TCP/IP", "Python", "network security", "OSI model", "routing", "switching", "LAN", "WAN", "network topology", "firewalls", "VPN", "network configuration", "packet switching", "subnetting", "network troubleshooting", "cloud networking", "IoT networking", "wireless networks"]},
+    {"id": "CSE3119", "name": "Software Engineering", "tags": ["software development", "engineering", "project management", "Agile", "Scrum", "Python", "Java", "design patterns", "software testing", "requirements gathering", "code reviews", "version control", "CI/CD", "deployment", "user stories", "sprint planning", "retrospectives", "documentation", "architecture design", "scalability", "maintenance"]},
+    {"id": "CSE3120", "name": "Artificial Intelligence", "tags": ["AI", "machine learning", "intelligent systems", "Python", "R", "neural networks", "robotics", "autonomous systems", "computer vision", "NLP", "knowledge representation", "search algorithms", "heuristic methods", "natural language understanding", "AI ethics", "deep learning", "reinforcement learning", "human-AI interaction", "AI in healthcare", "AI in finance"]},
+    {"id": "CSE3121", "name": "Cybersecurity", "tags": ["security", "network security", "encryption", "information security", "Python", "ethical hacking", "firewalls", "risk assessment", "incident response", "malware analysis", "penetration testing", "vulnerability assessment", "data protection", "cyber threats", "security policies", "secure coding", "authentication", "encryption algorithms", "network defense", "cyber law"]},
+    {"id": "CSE3122", "name": "Cloud Computing", "tags": ["cloud", "virtualization", "cloud services", "AWS", "Azure", "DevOps", "Python", "microservices", "containers", "Kubernetes", "serverless architecture", "cloud storage", "load balancing", "auto-scaling", "cloud security", "hybrid cloud", "data lakes", "cost management", "cloud deployment", "API management", "disaster recovery"]},
+    {"id": "CSE3123", "name": "Web Development", "tags": ["web development", "frontend", "backend", "HTML", "CSS", "JavaScript", "React", "Node.js", "APIs", "responsive design", "user interface", "user experience", "web frameworks", "testing frameworks", "version control", "RESTful services", "web security", "content management systems", "performance optimization", "progressive web apps", "SEO"]},
+    {"id": "CSE3124", "name": "Mobile Application Development", "tags": ["mobile", "app development", "iOS", "Android", "Swift", "Kotlin", "Java", "user interface", "user experience", "mobile frameworks", "APIs", "responsive design", "mobile security", "app testing", "deployment", "app monetization", "cross-platform development", "push notifications", "data storage", "performance optimization", "mobile analytics"]},
+    {"id": "CSE3125", "name": "Big Data Technologies", "tags": ["big data", "data processing", "Hadoop", "Spark", "Python", "data analytics", "data lakes", "data warehouses", "stream processing", "batch processing", "NoSQL databases", "data mining", "machine learning", "data visualization", "data governance", "ETL processes", "distributed computing", "scalability", "real-time analytics", "data quality", "Apache Kafka"]},
+    {"id": "CSE3126", "name": "Computer Graphics", "tags": ["graphics", "visualization", "3D modeling", "rendering", "C++", "OpenGL", "animation", "shader programming", "texture mapping", "game graphics", "computer-aided design", "virtual reality", "augmented reality", "image processing", "graphics algorithms", "scene graph", "ray tracing", "lighting models", "camera systems", "graphics APIs", "digital art"]},
+    {"id": "CSE3127", "name": "Game Development", "tags": ["game development", "software engineering", "Unity", "game design", "C#", "C++", "game physics", "AI in games", "level design", "character modeling", "animation", "multiplayer systems", "game engines", "user interface design", "audio design", "game monetization", "performance optimization", "cross-platform development", "testing", "release management", "community management"]},
+    {"id": "CSE3128", "name": "Machine Learning Operations", "tags": ["MLOps", "machine learning", "deployment", "model management", "Python", "CI/CD", "monitoring", "scalability", "data pipelines", "model versioning", "data validation", "automated testing", "model retraining", "cloud deployment", "A/B testing", "performance metrics", "collaboration tools", "data governance", "workflow automation", "security"]},
+    {"id": "CSE3129", "name": "Embedded Systems", "tags": ["embedded systems", "hardware", "microcontrollers", "IoT", "C", "Arduino", "Raspberry Pi", "real-time systems", "sensor integration", "communication protocols", "power management", "firmware development", "system on a chip", "wireless communication", "debugging techniques", "IoT security", "device management", "hardware interfaces", "prototyping", "data acquisition", "signal processing"]},
+    {"id": "CSE3130", "name": "Quantum Computing", "tags": ["quantum computing", "advanced computing", "quantum algorithms", "Qiskit", "Python", "quantum mechanics", "quantum cryptography", "superposition", "entanglement", "quantum gates", "quantum circuits", "quantum simulation", "error correction", "quantum supremacy", "applications in AI", "optimization problems", "quantum communication", "quantum annealing", "future technologies", "quantum hardware"]},
+    {"id": "CSE3131", "name": "Internet of Things (IoT)", "tags": ["IoT", "networking", "smart devices", "sensor networks", "Python", "C", "Arduino", "cloud integration", "data collection", "edge computing", "IoT security", "protocols", "data analytics", "real-time processing", "device interoperability", "energy management", "home automation", "industrial IoT", "wearable technology", "application development", "user experience"]},
+    {"id": "CSE3132", "name": "Blockchain Technology", "tags": ["blockchain", "cryptocurrency", "distributed ledger", "smart contracts", "Solidity", "Ethereum", "decentralization", "cryptography", "consensus algorithms", "blockchain architecture", "tokenization", "decentralized applications", "NFTs", "blockchain security", "scalability", "privacy", "regulatory issues", "interoperability", "supply chain", "financial technology"]},
+    {"id": "CSE3133", "name": "Human-Computer Interaction", "tags": ["HCI", "user experience", "usability", "interface design", "Python", "design thinking", "user research", "prototyping", "wireframing", "accessibility", "interaction design", "cognitive psychology", "user testing", "personas", "storyboarding", "visual design", "mobile interaction", "augmented reality", "user feedback", "information architecture"]},
+    {"id": "CSE3134", "name": "Natural Language Processing", "tags": ["NLP", "AI", "language processing", "text analysis", "machine translation", "Python", "spaCy", "sentiment analysis", "chatbots", "text summarization", "named entity recognition", "part-of-speech tagging", "language models", "word embeddings", "transformers", "speech recognition", "dialog systems", "text mining", "corpus linguistics", "semantic analysis"]},
+    {"id": "CSE3135", "name": "Data Visualization", "tags": ["data visualization", "analytics", "data storytelling", "charts", "Python", "Tableau", "Matplotlib", "data interpretation", "infographics", "dashboard design", "visual encoding", "interactive visualization", "data-driven design", "data exploration", "design principles", "data ethics", "color theory", "chart types", "presentation skills", "business intelligence", "user engagement"]},
+]
+
+
+# OpenAI API Key 
+openai.api_key = 'YOUR_API_KEY'  # Replace with your actual OpenAI API key.
+
+def recommend_courses(interests, completed_courses):
+    recommendations = []
+    interests_set = set(interests)  # Convert interests to a set for faster lookup
+    completed_courses_set = set(completed_courses)  # Convert completed courses to a set for faster lookup
+
+    for course in courses:
+        if str(course["id"]) not in completed_courses_set:
+            # Check if any tag in the course matches the user's interests
+            if any(tag.lower() in interests_set for tag in course["tags"]):
+                recommendations.append(course["name"])
+
+    return recommendations
+
+def recommend_with_openai(interests, completed_courses):
+    try:
+        # Request OpenAI to generate course recommendations using gpt-3.5-turbo model
+        prompt = f"Given the following interests: {', '.join(interests)} and completed courses: {', '.join(completed_courses)}, suggest some elective courses based on the information provided."
+
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # Using gpt-3.5-turbo model
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that suggests courses based on the user's interests and completed courses."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=150,
+            temperature=0.7,
+        )
+
+        recommendations = response.choices[0].message['content'].strip()
+        return recommendations
+
+    except Exception as e:
+        return f"Error generating recommendations: {str(e)}"
+
+def recommend(interests, completed_courses):
+    # Convert input strings to lists
+    interests_list = [interest.strip().lower() for interest in interests.split(",")]
+    completed_courses_list = [course.strip() for course in completed_courses.split(",")]
+
+    # First, try to generate recommendations from available courses based on tags
+    recommendations = recommend_courses(interests_list, completed_courses_list)
+
+    # If no courses match, use OpenAI to generate recommendations
+    if not recommendations:
+        recommendations = recommend_with_openai(interests_list, completed_courses_list)
+
+    # Return recommendations as a comma-separated string
+    return ", ".join(recommendations) if isinstance(recommendations, list) else recommendations
+
+def view_all_courses():
+    # Display all available courses
+    return "\n".join([f"{course['id']}: {course['name']} - Curriculum: {', '.join(course['tags'])}" for course in courses])
+
+# Define Gradio interface
+with gr.Blocks() as interface:
+    gr.Markdown("# Elective Recommendation System")
+    gr.Markdown("Enter your interests and completed courses to get personalized elective recommendations.")
+
+    with gr.Row():
+        interests_input = gr.Textbox(label="Interests (comma-separated)", placeholder="e.g., data science, machine learning")
+        completed_courses_input = gr.Textbox(label="Completed Courses (comma-separated IDs)", placeholder="e.g., 1")
+        submit_button = gr.Button("Get Recommendations")
+
+    recommendations_output = gr.Textbox(label="Recommended Courses")
+
+    with gr.Row():
+        view_courses_button = gr.Button("View All Courses")
+        all_courses_output = gr.Textbox(label="All Available Courses", interactive=False)
+
+    submit_button.click(
+        fn=recommend,
+        inputs=[interests_input, completed_courses_input],
+        outputs=[recommendations_output]
+    )
+
+    view_courses_button.click(
+        fn=view_all_courses,
+        inputs=[],
+        outputs=[all_courses_output]
+    )
+
+# Launch the interface
+interface.launch(share=True)
